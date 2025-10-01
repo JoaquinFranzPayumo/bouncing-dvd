@@ -1,84 +1,66 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+let speed = 20;
+let scale = 0.17; // Image scale (I work on 1080p monitor)
+let canvas;
+let ctx;
+let logoColor;
 
-// Scene + Camera
-const scene = new THREE.Scene();
-const camera = new THREE.OrthographicCamera(
-  -400, 400,   // left, right
-  400, -400,   // top, bottom
-  0.1, 1000
-);
-camera.position.z = 10;
+let dvd = {
+    x: 200,
+    y: 300,
+    xspeed: 10,
+    yspeed: 10,
+    img: new Image()
+};
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(800, 800);
-document.body.appendChild(renderer.domElement);
+(function main(){
+    canvas = document.getElementById("tv-screen");
+    ctx = canvas.getContext("2d");
+    dvd.img.src = 'assets/dvd-logo.png';
 
-// DVD Logo Plane
-let dvdWidth = 150;
-let dvdHeight = 80;
-const geometry = new THREE.PlaneGeometry(dvdWidth, dvdHeight);
+    //Draw the "tv screen"
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-// Load DVD logo texture (make sure dvd-logo.png is in /assets/)
-const textureLoader = new THREE.TextureLoader();
-const dvdTexture = textureLoader.load("assets/dvd-logo.png");
+    pickColor();
+    update();
+})();
 
-const material = new THREE.MeshBasicMaterial({
-  map: dvdTexture,
-  transparent: true,     // allows PNG transparency
-  color: getRandomColor() // tint color
-});
-
-const dvdLogo = new THREE.Mesh(geometry, material);
-scene.add(dvdLogo);
-
-// Start at origin
-dvdLogo.position.set(0, 0, 0);
-
-// Velocity
-let velocityX = 3;
-let velocityY = 3;
-
-// Screen bounds
-const boundX = 400;
-const boundY = 400;
-
-function animate() {
-  requestAnimationFrame(animate);
-
-  // Move
-  dvdLogo.position.x += velocityX;
-  dvdLogo.position.y += velocityY;
-
-  // Bounce X
-  if (dvdLogo.position.x + (dvdWidth * dvdLogo.scale.x) / 2 >= boundX ||
-      dvdLogo.position.x - (dvdWidth * dvdLogo.scale.x) / 2 <= -boundX) {
-    velocityX *= -1;
-    changeColorAndShrink();
-  }
-
-  // Bounce Y
-  if (dvdLogo.position.y + (dvdHeight * dvdLogo.scale.y) / 2 >= boundY ||
-      dvdLogo.position.y - (dvdHeight * dvdLogo.scale.y) / 2 <= -boundY) {
-    velocityY *= -1;
-    changeColorAndShrink();
-  }
-
-  renderer.render(scene, camera);
+function update() {
+    setTimeout(() => {
+        //Draw the canvas background
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        //Draw DVD Logo and his background
+        ctx.fillStyle = logoColor;
+        ctx.fillRect(dvd.x, dvd.y, dvd.img.width*scale, dvd.img.height*scale);
+        ctx.drawImage(dvd.img, dvd.x, dvd.y, dvd.img.width*scale, dvd.img.height*scale);
+        //Move the logo
+        dvd.x+=dvd.xspeed;
+        dvd.y+=dvd.yspeed;
+        //Check for collision 
+        checkHitBox();
+        update();   
+    }, speed)
 }
 
-// Tint + shrink on collision
-function changeColorAndShrink() {
-  dvdLogo.material.color.set(getRandomColor());
-  dvdLogo.scale.multiplyScalar(0.85);
-
-  if (dvdLogo.scale.x < 0.05 || dvdLogo.scale.y < 0.05) {
-    scene.remove(dvdLogo);
-  }
+//Check for border collision
+function checkHitBox(){
+    if(dvd.x+dvd.img.width*scale >= canvas.width || dvd.x <= 0){
+        dvd.xspeed *= -1;
+        pickColor();
+    }
+        
+    if(dvd.y+dvd.img.height*scale >= canvas.height || dvd.y <= 0){
+        dvd.yspeed *= -1;
+        pickColor();
+    }    
 }
 
-// Random color
-function getRandomColor() {
-  return new THREE.Color(Math.random(), Math.random(), Math.random());
-}
+//Pick a random color in RGB format
+function pickColor(){
+    r = Math.random() * (254 - 0) + 0;
+    g = Math.random() * (254 - 0) + 0;
+    b = Math.random() * (254 - 0) + 0;
 
-animate();
+    logoColor = 'rgb('+r+','+g+', '+b+')';
+}
