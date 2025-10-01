@@ -24,8 +24,8 @@ const dvdTexture = textureLoader.load("assets/dvd-logo.png");
 
 const material = new THREE.MeshBasicMaterial({
   map: dvdTexture,
-  transparent: true,     // allows PNG transparency
-  color: getRandomColor() // tint color
+  transparent: true,
+  color: 0xffffff // white tint by default
 });
 
 const dvdLogo = new THREE.Mesh(geometry, material);
