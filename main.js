@@ -1,6 +1,6 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
-// Scene setup
+// Scene + Camera
 const scene = new THREE.Scene();
 const camera = new THREE.OrthographicCamera(
   -400, 400,   // left, right
@@ -9,50 +9,56 @@ const camera = new THREE.OrthographicCamera(
 );
 camera.position.z = 10;
 
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(800, 800);
 document.body.appendChild(renderer.domElement);
 
-// Create the "DVD logo" as a PlaneGeometry
-let dvdWidth = 100;
-let dvdHeight = 50;
-let geometry = new THREE.PlaneGeometry(dvdWidth, dvdHeight);
-let material = new THREE.MeshBasicMaterial({ color: getRandomColor() });
-let dvdLogo = new THREE.Mesh(geometry, material);
+// DVD Logo Plane
+let dvdWidth = 150;
+let dvdHeight = 80;
+const geometry = new THREE.PlaneGeometry(dvdWidth, dvdHeight);
+
+// Load DVD logo texture (make sure dvd-logo.png is in /assets/)
+const textureLoader = new THREE.TextureLoader();
+const dvdTexture = textureLoader.load("assets/dvd-logo.png");
+
+const material = new THREE.MeshBasicMaterial({
+  map: dvdTexture,
+  transparent: true,     // allows PNG transparency
+  color: getRandomColor() // tint color
+});
+
+const dvdLogo = new THREE.Mesh(geometry, material);
 scene.add(dvdLogo);
 
-// Start position
+// Start at origin
 dvdLogo.position.set(0, 0, 0);
 
-// Movement speed
+// Velocity
 let velocityX = 3;
 let velocityY = 3;
 
-// Bounds (±400 is the screen size, but we account for half of logo size)
-let boundX = 400;
-let boundY = 400;
+// Screen bounds
+const boundX = 400;
+const boundY = 400;
 
-// Animation loop
 function animate() {
   requestAnimationFrame(animate);
 
-  // Move logo
+  // Move
   dvdLogo.position.x += velocityX;
   dvdLogo.position.y += velocityY;
 
-  // Collision detection with bounds
-  if (
-    dvdLogo.position.x + dvdWidth / 2 >= boundX ||
-    dvdLogo.position.x - dvdWidth / 2 <= -boundX
-  ) {
+  // Bounce X
+  if (dvdLogo.position.x + (dvdWidth * dvdLogo.scale.x) / 2 >= boundX ||
+      dvdLogo.position.x - (dvdWidth * dvdLogo.scale.x) / 2 <= -boundX) {
     velocityX *= -1;
     changeColorAndShrink();
   }
 
-  if (
-    dvdLogo.position.y + dvdHeight / 2 >= boundY ||
-    dvdLogo.position.y - dvdHeight / 2 <= -boundY
-  ) {
+  // Bounce Y
+  if (dvdLogo.position.y + (dvdHeight * dvdLogo.scale.y) / 2 >= boundY ||
+      dvdLogo.position.y - (dvdHeight * dvdLogo.scale.y) / 2 <= -boundY) {
     velocityY *= -1;
     changeColorAndShrink();
   }
@@ -60,18 +66,17 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// Function: randomize color + shrink
+// Tint + shrink on collision
 function changeColorAndShrink() {
   dvdLogo.material.color.set(getRandomColor());
-  dvdLogo.scale.multiplyScalar(0.85); // shrink by 15% every hit
+  dvdLogo.scale.multiplyScalar(0.85);
 
-  // After 5-8 bounces, object should vanish (scale tiny)
   if (dvdLogo.scale.x < 0.05 || dvdLogo.scale.y < 0.05) {
     scene.remove(dvdLogo);
   }
 }
 
-// Random color generator
+// Random color
 function getRandomColor() {
   return new THREE.Color(Math.random(), Math.random(), Math.random());
 }
