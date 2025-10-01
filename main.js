@@ -18,38 +18,43 @@ document.body.appendChild(renderer.domElement);
 
 // Load DVD Logo Texture
 const textureLoader = new THREE.TextureLoader();
-const dvdTexture = textureLoader.load("dvd_logo.png");
+const dvdTexture = textureLoader.load(
+  "dvd_logo.png", // Make sure this file is in the same folder!
+  () => console.log("✅ Texture loaded successfully"),
+  undefined,
+  (err) => console.error("❌ Texture failed to load", err)
+);
 
+// Create DVD Logo Mesh
 const dvdGeometry = new THREE.PlaneGeometry(120, 60);
 const dvdMaterial = new THREE.MeshBasicMaterial({
   map: dvdTexture,
-  color: 0xffffff, // base white so tint works properly
+  color: 0xffffff, // tint starts as white
   transparent: true
 });
-
 const dvdLogo = new THREE.Mesh(dvdGeometry, dvdMaterial);
 scene.add(dvdLogo);
 
-// Movement variables
+// Movement Variables
 let dx = 3;
 let dy = 2;
 
-// Animation loop
+// Animation Loop
 function animate() {
   requestAnimationFrame(animate);
 
-  // Move DVD logo
+  // Move logo
   dvdLogo.position.x += dx;
   dvdLogo.position.y += dy;
 
-  // Check horizontal bounds
+  // Horizontal bounds check
   if (dvdLogo.position.x + (60 * dvdLogo.scale.x) >= WIDTH / 2 ||
       dvdLogo.position.x - (60 * dvdLogo.scale.x) <= -WIDTH / 2) {
     dx = -dx;
     handleBounce();
   }
 
-  // Check vertical bounds
+  // Vertical bounds check
   if (dvdLogo.position.y + (30 * dvdLogo.scale.y) >= HEIGHT / 2 ||
       dvdLogo.position.y - (30 * dvdLogo.scale.y) <= -HEIGHT / 2) {
     dy = -dy;
@@ -59,7 +64,7 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// Handle bounce (tint + shrink)
+// Bounce effect (color tint + shrink)
 function handleBounce() {
   dvdLogo.material.color.set(getRandomColor());
   dvdLogo.scale.multiplyScalar(0.85);
@@ -75,5 +80,5 @@ function getRandomColor() {
   return new THREE.Color(Math.random(), Math.random(), Math.random());
 }
 
-// Start animation
+// Start
 animate();
